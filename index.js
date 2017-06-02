@@ -5,5 +5,7 @@ module.exports = {
   Errors: require('./src/errors'),
   HttpRpc: require('./src/rpc'),
   TransferLog: require('./src/transferlog'),
-  Validator: require('./src/validator')
+  Validator: require('./src/validator'),
+  ObjStore: require('./src/store'),
+  Util: require('./src/util')
 }

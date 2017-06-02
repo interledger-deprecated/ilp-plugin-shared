@@ -4,7 +4,7 @@ const InvalidFieldsError = require('./errors').InvalidFieldsError
 const util = require('util')
 
 const REGEX_32_BYTES_AS_BASE64URL = /^[A-Za-z0-9_-]{43}$/
-const REGEX_INTEGER = /
+const REGEX_INTEGER = /^[1-9][0-9]*$/
 const xor = (a, b) => ((a || b) && (!a || !b))
 const omitUndefined = (o) => Object.keys(o).reduce((a, e) => {
   if (o[e] !== undefined) a[e] = o[e]
@@ -12,15 +12,16 @@ const omitUndefined = (o) => Object.keys(o).reduce((a, e) => {
 }, {})
 
 module.exports = class Validator {
-  constructor (plugin) {
+  constructor ({ plugin }) {
     this._plugin = plugin
   }
 
   normalizeOutgoingTransfer (t) {
-    validateOutgoingTransfer(t)
+    this.validateOutgoingTransfer(t)
     return omitUndefined({
       id: t.id,
       to: t.to || t.account,
+      amount: t.amount,
       from: this._plugin.getAccount(),
       ledger: this._plugin.getInfo().prefix,
       ilp: t.ilp,
@@ -32,9 +33,10 @@ module.exports = class Validator {
   }
 
   normalizeIncomingTransfer (t) {
-    validateIncomingTransfer(t)
+    this.validateIncomingTransfer(t)
     return omitUndefined({
       id: t.id,
+      amount: t.amount,
       to: t.to,
       from: t.from,
       ledger: this._plugin.getInfo().prefix,
@@ -46,11 +48,13 @@ module.exports = class Validator {
   }
 
   normalizeOutgoingMessage (m) {
-    validateOutgoingMessage(m)
+    this.validateOutgoingMessage(m)
+    return m
   }
 
   normalizeIncomingMessage (m) {
-
+    this.validateIncomingMessage(m)
+    return m
   }
 
   validateIncomingTransfer (t) {
@@ -67,7 +71,6 @@ module.exports = class Validator {
 
   validateTransfer (t) {
     assert(t.id, 'must have an id')
-    assert(t.ledger, 'must have a ledger')
     assert(t.amount, 'must have an amount')
 
     assertString(t.id, 'id')
@@ -77,7 +80,10 @@ module.exports = class Validator {
     assertObject(t.custom, 'custom')
     assertConditionOrPreimage(t.executionCondition, 'executionCondition')
     assertString(t.expiresAt, 'expiresAt')
-    assertPrefix(t.ledger, this._plugin.getInfo().prefix, 'ledger')
+
+    if (t.ledger) {
+      assertPrefix(t.ledger, this._plugin.getInfo().prefix, 'ledger')
+    }
 
     if (xor(t.executionCondition, t.expiresAt)) {
       throw new Error('executionCondition (' + t.executionCondition +
@@ -127,13 +133,11 @@ module.exports = class Validator {
   }
 
   assertIncoming (o) {
-    assertAccount(o.to, this._account, 'to')
-    assertAccount(o.from, this._peer, 'from')
+    assertAccount(o.to, this._plugin.getAccount(), 'to')
   }
 
   assertOutgoing (o) {
-    assertAccount(o.to, this._peer, 'to')
-    if (o.from) assertAccount(o.from, this._account, 'from')
+    if (o.from) assertAccount(o.from, this._plugin.getAccount(), 'from')
   }
 
 }

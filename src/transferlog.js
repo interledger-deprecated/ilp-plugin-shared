@@ -1,5 +1,5 @@
 'use strict'
-const errors = require('../util/errors')
+const errors = require('./errors')
 const TransferNotFoundError = errors.TransferNotFoundError
 const TransferNotConditionalError = errors.TransferNotConditionalError
 const DuplicateIdError = errors.DuplicateIdError

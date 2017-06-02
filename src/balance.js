@@ -3,7 +3,7 @@ const BigNumber = require('bignumber.js')
 const debug = require('debug')('ilp-plugin-virtual:balance')
 const EventEmitter = require('eventemitter2')
 
-const errors = require('../util/errors')
+const errors = require('./errors')
 const NotAcceptedError = errors.NotAcceptedError
 const InvalidFieldsError = errors.InvalidFieldsError
 
@@ -16,11 +16,19 @@ module.exports = class Balance extends EventEmitter {
     this._maximum = new BigNumber(opts.maximum)
     this._balance = null
 
-    this._key = BALANCE_PREFIX
+    this._key = BALANCE_PREFIX + (opts.key || '')
     this._store = opts.store
 
     // used to keep writes to store in order. See queueWrite.
     this._writeToStoreQueue = Promise.resolve()
+  }
+
+  setMaximum (n) {
+    this._maximum = new BigNumber(n)
+  }
+
+  getMaximum () {
+    return this._maximum
   }
 
   // _queueWrite solves the problem of balance updates being committed to the
