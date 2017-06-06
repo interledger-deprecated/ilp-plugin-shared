@@ -117,6 +117,10 @@ module.exports = class Validator {
       assertString(m.ilp, 'message ilp must be a string')
     }
 
+    if (m.ledger) {
+      assertPrefix(m.ledger, this._plugin.getInfo().prefix, 'ledger')
+    }
+
     if (m.account) {
       util.deprecate(() => {}, 'switch from the "account" field to the "to" and "from" fields!')()
       assertString(m.account, 'account')
@@ -124,7 +128,6 @@ module.exports = class Validator {
     }
 
     assert(m.to, 'must have a destination (.to)')
-    assertPrefix(m.ledger, this._prefix, 'ledger')
   }
 
   validateFulfillment (f) {
